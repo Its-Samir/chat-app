@@ -14,47 +14,46 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid()) @map("_id")
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  messages        Message[]
-  messageReceipts MessageReceipt[]
-  conversations   ConversationParticipant[]
+  id               String                    @id @default(cuid()) @map("_id")
+  username         String                    @unique
+  password         String
+  avatar           String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  messages         Message[]
+  messageReceipts  MessageReceipt[]
+  conversations    ConversationParticipant[]
+  sentRequests     FriendRequest[]           @relation("SentRequests")
+  recievedRequests FriendRequest[]           @relation("ReceivedRequests")
 }
 
 model Conversation {
-  id        String   @id @default(cuid()) @map("_id")
-  title     String?
-  isGroup   Boolean  @default(false)
-  uniqueId  String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           String                    @id @default(cuid()) @map("_id")
+  title        String?
+  isGroup      Boolean                   @default(false)
+  uniqueId     String                    @unique
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
   participants ConversationParticipant[]
   messages     Message[]
 }
 
 model ConversationParticipant {
-  id             String   @id @default(cuid()) @map("_id")
+  id             String       @id @default(cuid()) @map("_id")
   userId         String
   conversationId String
-  joinedAt       DateTime @default(now())
-
-  user         User         @relation(fields: [userId], references: [id])
-  conversation Conversation @relation(fields: [conversationId], references: [id])
+  joinedAt       DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model Message {
-  id             String   @id @default(cuid()) @map("_id")
-  content        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  senderId       String
-  conversationId String
-
+  id              String           @id @default(cuid()) @map("_id")
+  content         String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  senderId        String
+  conversationId  String
   messageReceipts MessageReceipt[]
   sender          User             @relation(fields: [senderId], references: [id])
   conversation    Conversation     @relation(fields: [conversationId], references: [id])
@@ -66,7 +65,17 @@ model MessageReceipt {
   timestamp DateTime @default(now())
   messageId String
   userId    String
+  message   Message  @relation(fields: [messageId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
 
-  message Message @relation(fields: [messageId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+model FriendRequest {
+  id         String   @id @default(cuid()) @map("_id")
+  senderId   String
+  receiverId String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sender     User     @relation("SentRequests", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
 }
